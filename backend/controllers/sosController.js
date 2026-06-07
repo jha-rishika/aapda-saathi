@@ -1,48 +1,49 @@
 import SosAlert from '../models/SosAlert.js';
 
-// @desc    Create a new SOS emergency alert
-// @route   POST /api/sos
-// @access  Public
-export const createSosAlert = async (req, res) => {
+export const triggerSosAlert = async (req, res) => {
   try {
-    const { name, phone, disasterType, location, message } = req.body;
+    const { 
+      name, phone, disasterType, message, 
+      latitude, longitude, 
+      age, bloodGroup, allergies, historicalInjuries 
+    } = req.body;
 
-    const newAlert = await SosAlert.create({
+    let voiceLogUrl = null;
+    if (req.file) {
+      voiceLogUrl = `/uploads/${req.file.filename}`;
+    }
+
+    const newAlert = new SosAlert({
       name,
       phone,
       disasterType,
-      location,
       message,
+      location: {
+        latitude: latitude || 'Unknown Node',
+        longitude: longitude || 'Unknown Node'
+      },
+      medicalContext: {
+        age,
+        bloodGroup,
+        allergies,
+        historicalInjuries
+      },
+      voiceLogUrl
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'SOS Alert transmitted successfully to headquarters!',
-      data: newAlert,
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+    const savedAlert = await newAlert.save();
 
-// @desc    Get all SOS alerts
-// @route   GET /api/sos
-// @access  Public
-export const getAllAlerts = async (req, res) => {
-  try {
-    const alerts = await SosAlert.find().sort({ createdAt: -1 });
-    res.status(200).json({
+    return res.status(201).json({
       success: true,
-      count: alerts.length,
-      data: alerts,
+      message: "Crisis transmission loop anchored into central command base database registry.",
+      alertId: savedAlert._id
     });
+
   } catch (error) {
-    res.status(500).json({
+    console.error(`[CONTROLLER EXCEPTION FAULT]: ${error.message}`);
+    return res.status(500).json({
       success: false,
-      error: 'Server Error: Unable to retrieve emergency logs',
+      error: "Emergency Server internal loop failure. Operational telemetry rejected."
     });
   }
 };

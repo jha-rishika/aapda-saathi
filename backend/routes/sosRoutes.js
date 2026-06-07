@@ -1,11 +1,32 @@
 import express from 'express';
-import { createSosAlert, getAllAlerts } from '../controllers/sosController.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { triggerSosAlert } from '../controllers/sosController.js';
 
 const router = express.Router();
 
-// This maps a POST and GET request directly to the base path /
-router.route('/')
-  .post(createSosAlert) // Handles citizens sending an SOS
-  .get(getAllAlerts);   // Handles loading alerts for the admin view
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const uploadDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'PANIC-VOICE-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
+
+router.post('/', upload.single('voiceLog'), triggerSosAlert);
 
 export default router;

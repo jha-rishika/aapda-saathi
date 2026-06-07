@@ -1,52 +1,56 @@
-import React, { useState } from 'react';
-import Login from './components/Login';
-import Sidebar from './components/Sidebar';
+import { useState } from 'react';
+import AuthGateway from './components/AuthGateway';
+import TopBar from './components/TopBar';
+import RightSidebar from './components/RightSidebar';
 import CitizenDashboard from './components/CitizenDashboard';
-import AdminDashboard from './components/AdminDashboard';
+import LiveBulletins from './components/LiveBulletins';
+import MedicalVault from './components/MedicalVault';
 
 export default function App() {
-  const [user, setUser] = useState(null); // Tracks our logged-in citizen entity
-  const [currentView, setCurrentView] = useState('citizen');
+  const [user, setUser] = useState(null);
+  const [currentView, setCurrentView] = useState('citizen'); // citizen, bulletins, profile
+  
+  // Shared medical data bucket to stitch directly into outgoing payloads
+  const [medicalProfile, setMedicalProfile] = useState({
+    age: '20',
+    bloodGroup: 'O Positive',
+    height: '174 cm',
+    weight: '68 kg',
+    allergies: 'Penicillin compounds, dust particles tracking',
+    injuries: 'No historical major operations recorded'
+  });
 
-  // Authentication entry hook
-  const handleLoginSuccess = (profileData) => {
-    setUser(profileData);
-  };
-
-  // If user entity context doesn't exist, route instantly to authentication portal
   if (!user) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
+    return <AuthGateway onLoginSuccess={(session) => {
+      setUser(session);
+      setCurrentView('citizen');
+    }} />;
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex font-sans antialiased text-slate-800">
-      {/* Dynamic Global Dashboard Side Navigation */}
-      <Sidebar currentView={currentView} setCurrentView={setCurrentView} />
+    <div className="w-full min-h-screen bg-slate-50 flex flex-col antialiased selection:bg-[#048c7f] selection:text-white">
+      
+      {/* FIXED TOP NAVIGATION BAR */}
+      <TopBar currentView={currentView} setCurrentView={setCurrentView} user={user} />
 
-      {/* Main Grid Viewport Canvas Container */}
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto">
-        <header className="flex justify-between items-center pb-5 mb-6 border-b border-slate-200">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              Aapda Saathi Control Workspace
-            </span>
-            <h1 className="text-lg font-black text-slate-700 tracking-tight capitalize mt-0.5">
-              {currentView === 'citizen' ? 'Citizen Operations Center' : 'Authority Command Grid'}
-            </h1>
-          </div>
-          <div className="flex items-center space-x-2 bg-white px-4 py-1.5 rounded-xl shadow-xs border border-slate-200 text-xs font-bold text-slate-600">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Terminal Operational</span>
-          </div>
-        </header>
+      {/* CORE WORKSPACE FRAME */}
+      <div className="flex-1 flex flex-col md:flex-row w-full mt-16">
+        
+        {/* FIXED UTILITY SIDEBAR (LEFT/SIDE PLACEMENT) */}
+        <RightSidebar />
 
-        {/* Navigation Core Display Matrix */}
-        {currentView === 'citizen' ? (
-          <CitizenDashboard user={user} />
-        ) : (
-          <AdminDashboard />
-        )}
-      </main>
+        {/* PRIMARY ROUTE VIEWPORT CONTAINER */}
+        <main className="flex-1 p-6 overflow-y-auto">
+          {currentView === 'citizen' && (
+            <CitizenDashboard user={user} medicalProfile={medicalProfile} />
+          )}
+          {currentView === 'bulletins' && <LiveBulletins />}
+          {currentView === 'profile' && (
+            <MedicalVault profile={medicalProfile} setProfile={setMedicalProfile} />
+          )}
+        </main>
+
+      </div>
     </div>
   );
 }

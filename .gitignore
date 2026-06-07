@@ -1,7 +1,13 @@
 # Node modules
 node_modules/
 dist/
+
+# Security Keys
 .env
+backend/.env
+*.env
+
+uploads/
 
 # OS files
 .DS_Store

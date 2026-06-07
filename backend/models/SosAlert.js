@@ -1,42 +1,22 @@
 import mongoose from 'mongoose';
 
-const sosAlertSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Citizen name is required'],
-    trim: true
-  },
-  phone: {
-    type: String,
-    required: [true, 'Contact number is required'],
-    trim: true
-  },
-  disasterType: {
-    type: String,
-    required: [true, 'Disaster classification is required'],
-    enum: ['Flood', 'Earthquake', 'Cyclone', 'Fire', 'Medical Emergency', 'Other'] // Enforces valid types
-  },
+const SosAlertSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  phone: { type: String, required: true },
+  disasterType: { type: String, required: true },
+  message: { type: String, default: "Urgent assistance requested." },
   location: {
-    type: String,
-    required: [true, 'Location details are required'],
-    trim: true
+    latitude: { type: String, required: true },
+    longitude: { type: String, required: true }
   },
-  message: {
-    type: String,
-    trim: true,
-    default: 'Emergency! Immediate assistance required.'
+  medicalContext: {
+    age: { type: String },
+    bloodGroup: { type: String },
+    allergies: { type: String },
+    historicalInjuries: { type: String }
   },
-  status: {
-    type: String,
-    enum: ['Pending', 'Dispatched', 'Resolved'],
-    default: 'Pending' // New alerts default to Pending until admin takes action
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now // Automatically tracks exactly when the SOS was triggered
-  }
+  voiceLogUrl: { type: String, default: null },
+  timestamp: { type: Date, default: Date.now }
 });
 
-const SosAlert = mongoose.model('SosAlert', sosAlertSchema);
-
-export default SosAlert;
+export default mongoose.model('SosAlert', SosAlertSchema);
